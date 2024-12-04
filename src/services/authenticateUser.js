@@ -1,10 +1,10 @@
-export async function authenticateUser(fastify, userAttempt) {
-  const user = await fastify.prisma.user.findFirst({
+export async function authenticateUser(fastify, userAttempt, user) {
+  const _user = user || await fastify.prisma.user.findFirst({
     where: { email: userAttempt.email },
     select: { password: true }
   })
 
-  if (!user || (user.password !== userAttempt.password)) {
+  if (!_user || (_user.password !== userAttempt.password)) {
     return false;
   }
 
