@@ -9,12 +9,17 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/server.js"
+    "start": "nodemon src/server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "fastify": "^5.1.0"
+    "@joggr/fastify-prisma": "^4.0.0",
+    "fastify": "^5.1.0",
+    "nodemon": "^3.1.7"
+  },
+  "devDependencies": {
+    "prisma": "^6.0.1"
   }
 }
