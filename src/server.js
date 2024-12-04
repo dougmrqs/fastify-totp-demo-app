@@ -44,6 +44,24 @@ fastify.post('/users/:id/totp', async function (request, reply) {
   reply.status(403);
 });
 
+fastify.post('/users/:id/totp/verify', async function (request, reply) {
+  const { token } = request.body;
+  const id = +request.params.id;
+
+  const user = await fastify.prisma.user.findUnique({ 
+    where: { id }, 
+    select: { otp_secret: true }
+  });
+
+  const isValid = fastify.totp.verify({ secret: user.otp_secret, token });
+
+  if (isValid) {
+    reply.send({ message: 'Valid token' });
+  }
+
+  reply.status(401).send({ message: 'Invalid token' });
+});
+
 fastify.post('/users/authenticate', async function (request, reply) {
   const { email, password } = request.body;
   
