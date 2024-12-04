@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import FastifyPrismaPlugin from '@joggr/fastify-prisma';
 
 import { prisma } from './prisma.js';
+import { authenticateUser } from './services/authenticateUser.js';
 
 const fastify = Fastify({
   logger: true,
@@ -9,14 +10,14 @@ const fastify = Fastify({
 
 fastify.register(FastifyPrismaPlugin, {
   client: prisma
-})
+});
 
 fastify.post('/users/authenticate', async function (request, reply) {
   const { email, password } = request.body;
   
-  const user = await fastify.prisma.user.findFirst({ where: { email }, select: { password: true } },);
+  const canAuthenticate = await authenticateUser(fastify, { email, password });
 
-  if (!user || (user.password !== password)) {
+  if (!canAuthenticate) {
     return reply.status(401).send({ message: 'Cannot authenticate' });
   }
 
@@ -31,13 +32,13 @@ fastify.post('/users', async function (request, reply) {
   });
 
   reply.send(user);
-})
+});
 
 fastify.get('/users', async function (_, reply) {
   const users = await fastify.prisma.user.findMany();
 
   reply.send(users);
-})
+});
 
 fastify.get('/', function (request, reply) {
   reply.send({ hello: 'world' })
