@@ -11,6 +11,18 @@ fastify.register(FastifyPrismaPlugin, {
   client: prisma
 })
 
+fastify.post('/users/authenticate', async function (request, reply) {
+  const { email, password } = request.body;
+  
+  const user = await fastify.prisma.user.findFirst({ where: { email }, select: { password: true } },);
+
+  if (!user || (user.password !== password)) {
+    return reply.status(401).send({ message: 'Cannot authenticate' });
+  }
+
+  reply.status(201).send({ message: 'Authenticated' });
+});
+
 fastify.post('/users', async function (request, reply) {
   const { email, password } = request.body;
 
