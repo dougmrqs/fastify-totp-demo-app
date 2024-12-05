@@ -87,9 +87,20 @@ fastify.post('/users/:id/totp/verify', async function (request, reply) {
 });
 
 fastify.post('/users/authenticate', async function (request, reply) {
-  const { email, password } = request.body;
+  const { email, password, token } = request.body;
+
+  const user = await fastify.prisma.user.findUnique({ 
+    where: { email },
+    select: { password: true, otp_secret: true }
+  });
+
+  const authAttempt = {
+    email,
+    password,
+    token
+  }
   
-  const canAuthenticate = await authenticateUser(fastify, { email, password });
+  const canAuthenticate = await authenticateUser(fastify, authAttempt, user);
 
   if (!canAuthenticate) {
     return reply.status(401).send({ message: 'Cannot authenticate' });

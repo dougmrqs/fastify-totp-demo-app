@@ -4,9 +4,20 @@ export async function authenticateUser(fastify, userAttempt, user) {
     select: { password: true }
   })
 
-  if (!_user || (_user.password !== userAttempt.password)) {
-    return false;
+  const isValidPassword = checkPassword(_user, userAttempt.password);
+  const isTotpValid = await checkTotp(fastify, _user, userAttempt.token);
+
+  return isValidPassword && isTotpValid;
+}
+
+function checkPassword(user, password) {
+  return user.password === password;
+}
+
+function checkTotp(fastify, user, token) {
+  if (!user.otp_secret && !user.otp_verified) {
+    return true;
   }
 
-  return true;
+  return fastify.totp.verify({ secret: user.otp_secret, token });
 }
