@@ -67,13 +67,20 @@ fastify.post('/users/:id/totp/verify', async function (request, reply) {
 
   const user = await fastify.prisma.user.findUnique({ 
     where: { id }, 
-    select: { otp_secret: true }
+    select: { otp_secret: true, otp_verified: true }
   });
 
   const isValid = fastify.totp.verify({ secret: user.otp_secret, token });
 
   if (isValid) {
-    reply.send({ message: 'Valid token' });
+    if (!user.otp_verified) {
+      await fastify.prisma.user.update({
+        where: { id },
+        data: { otp_verified: true }
+      });
+    }
+
+    return reply.send({ message: 'Valid token' });
   }
 
   reply.status(401).send({ message: 'Invalid token' });
