@@ -44,6 +44,23 @@ fastify.post('/users/:id/totp', async function (request, reply) {
   reply.status(403);
 });
 
+fastify.get('/users/:id/totp/qrcode', async function (request, reply) {
+  // WARNING: This route needs to be protected but it is not for the sake of simplicity
+  const id = +request.params.id;
+
+  const user = await fastify.prisma.user.findUnique({ 
+    where: { id },
+    select: { otp_secret: true }
+  });
+
+  const secret = user.otp_secret;
+
+  const qrcode = await fastify.totp.generateQRCode({ secret });
+  const imgBuffer = Buffer.from(qrcode.split(',')[1], 'base64');
+
+  reply.type('image/png').send(imgBuffer);
+});
+
 fastify.post('/users/:id/totp/verify', async function (request, reply) {
   const { token } = request.body;
   const id = +request.params.id;
